@@ -7,6 +7,7 @@
 #include "sdm450.dtsi"
 #include "pm8953.dtsi"
 #include "pmi8950.dtsi"
+#include <dt-bindings/leds/common.h>
 
 /delete-node/ &qseecom_mem;
 
@@ -35,6 +36,22 @@
 			linux,code = <KEY_VOLUMEUP>;
 		};
 	};
+
+	/* AW3640 Flash LED Driver IC */
+	flash {
+		compatible = "awinic,aw3640";
+		enf-gpios = <&tlmm 25 GPIO_ACTIVE_HIGH>;
+
+		pinctrl-names = "default";
+		pinctrl-0 = <&front_flash_default>;
+
+		led {
+			function = LED_FUNCTION_FLASH;
+			color = <LED_COLOR_ID_WHITE>;
+			flash-max-timeout-us = <250000>;
+		};
+	};
+
 
 	reserved-memory {
 		qseecom_mem: qseecom@84300000 {
@@ -356,6 +373,13 @@
 		bias-pull-down;
 	};
 
+	front_flash_default: front-flash-default-state {
+		pins = "gpio25";
+		function = "gpio";
+
+		drive-strength = <2>;
+		bias-disable;
+	};
 };
 
 &usb3 {
