@@ -130,6 +130,23 @@
 	status = "okay";
 };
 
+&i2c_2 {
+	status = "okay";
+
+	cs35l35: speaker-amp@40 {
+		compatible = "cirrus,cs35l35";
+		reg = <0x40>;
+		interrupt-parent = <&tlmm>;
+		interrupts = <63 IRQ_TYPE_LEVEL_LOW>;
+		reset-gpios = <&tlmm 94 GPIO_ACTIVE_HIGH>;
+
+		pinctrl-names = "default";
+		pinctrl-0 = <&cs35l35_irq_default &cs35l35_reset_default>;
+
+		cirrus,boost-ind-nanohenry = <1000>;
+	};
+};
+
 &i2c_3 {
 	status = "okay";
 
@@ -371,6 +388,23 @@
 		function = "gpio";
 		drive-strength = <2>;
 		bias-pull-down;
+	};
+
+	cs35l35_irq_default: cs35l35-irq-default-state {
+		config {
+			pins = "gpio63";
+			bias-pull-up;
+			drive-strength = <2>;
+		};
+	};
+
+	cs35l35_reset_default: cs35l35-reset-default-state {
+		config {
+			pins = "gpio94";
+			output-high;
+			bias-pull-up;
+			drive-strength = <2>;
+		};
 	};
 
 	front_flash_default: front-flash-default-state {
