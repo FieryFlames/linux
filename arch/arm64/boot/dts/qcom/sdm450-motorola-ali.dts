@@ -72,6 +72,59 @@
 		regulator-always-on;
 		regulator-boot-on;
 	};
+
+	avdd_cam_rear_slave: vreg-cam-rear-slave-avdd {
+		compatible = "regulator-fixed";
+		regulator-name = "vreg-cam-rear-slave-avdd";
+		regulator-min-microvolt = <2800000>;
+		regulator-max-microvolt = <2800000>;
+		gpio = <&tlmm 50 GPIO_ACTIVE_HIGH>;
+		enable-active-high;
+		vin-supply = <&vph_pwr>;
+	};
+};
+
+&tlmm { 
+		cam_sensor_rear_slave_default: cam-sensor-rear-slave-default {
+			config {
+				pins = "gpio40", "gpio50";
+				function = "gpio";
+				bias-pull-up; // MUCH PULL!
+				drive-strength = <2>; /* 2 MA */
+			};
+		};
+};
+
+&cci_i2c1 {
+	camera-sensor@36 { // Rear slave camera
+		compatible = "ovti,ov5675";
+
+		reg = <0x36>;
+
+		clocks = <&gcc GCC_CAMSS_MCLK2_CLK>;
+
+		pinctrl-0 = <&cam_sensor_rear_slave_default>;
+		pinctrl-names = "default";
+
+		reset-gpios = <&tlmm 40 GPIO_ACTIVE_LOW>;
+
+		avdd-supply= <&avdd_cam_rear_slave>;
+		dvdd-supply = <&pm8953_l23>;
+		dovdd-supply = <&pm8953_l6>;
+		
+		rotation = <270>;
+		orientation = <1>;
+
+		status = "okay";
+
+		port {
+			rear_slave_cam_ep: endpoint {
+				data-lanes = <0 1>;
+				remote-endpoint = <&csiphy1_ep>;
+				link-frequencies = /bits/ 64 <450000000>;
+			};
+		};
+	};
 };
 
 &mdss {
@@ -245,6 +298,7 @@
 		pm8953_l2: l2 {
 			regulator-min-microvolt = <975000>;
 			regulator-max-microvolt = <1225000>;
+			regulator-always-on;
 		};
 
 		pm8953_l3: l3 {
@@ -260,11 +314,13 @@
 		pm8953_l6: l6 {
 			regulator-min-microvolt = <1800000>;
 			regulator-max-microvolt = <1800000>;
+			regulator-always-on;
 		};
 
 		pm8953_l7: l7 {
 			regulator-min-microvolt = <1800000>;
 			regulator-max-microvolt = <1900000>;
+			regulator-always-on;
 		};
 
 		pm8953_l8: l8 {
@@ -305,6 +361,7 @@
 		pm8953_l17: l17 {
 			regulator-min-microvolt = <2850000>;
 			regulator-max-microvolt = <2850000>;
+			regulator-always-on;
 		};
 
 		pm8953_l19: l19 {
@@ -315,11 +372,13 @@
 		pm8953_l22: l22 {
 			regulator-min-microvolt = <2800000>;
 			regulator-max-microvolt = <2850000>;
+			regulator-always-on;
 		};
 
 		pm8953_l23: l23 {
 			regulator-min-microvolt = <975000>;
 			regulator-max-microvolt = <1225000>;
+			regulator-always-on;
 		};
 	};
 };
@@ -457,4 +516,29 @@
 
 &zap_shader {
 	firmware-name = "qcom/msm8953/motorola/ali/a506_zap.mdt";
+};
+
+&cci {
+	pinctrl-0 = <&cci0_default>,
+		    <&cci1_default>,
+			<&camss_mclk2_default>;
+	pinctrl-names = "default";
+
+	status = "okay";
+};
+
+&camss {
+	status = "okay";
+	vdda-supply = <&pm8953_s3>;
+
+	ports {
+		port@1 {
+			reg = <1>;
+			csiphy1_ep: endpoint {
+				clock-lanes = <7>;
+				data-lanes = <0 1>;
+				remote-endpoint = <&rear_slave_cam_ep>;
+			};
+		};
+	};
 };
