@@ -8,6 +8,8 @@
 #include "pm8953.dtsi"
 #include "pmi8950.dtsi"
 #include <dt-bindings/leds/common.h>
+#include <dt-bindings/clock/qcom,rpmcc.h>
+#include <dt-bindings/pinctrl/qcom,pmic-gpio.h>
 
 /delete-node/ &qseecom_mem;
 
@@ -82,6 +84,105 @@
 		enable-active-high;
 		vin-supply = <&vph_pwr>;
 	};
+
+	clocks {
+		ccp_rtc: clock {
+    	  compatible = "fixed-clock";
+    	  #clock-cells = <0>;
+    	  clock-frequency = <32768>;
+    	};
+	};
+
+	i2c-gpio {
+		compatible = "i2c-gpio";
+		sda-gpios = <&tlmm 14 (GPIO_ACTIVE_HIGH|GPIO_OPEN_DRAIN)>;
+		scl-gpios = <&tlmm 15 (GPIO_ACTIVE_HIGH|GPIO_OPEN_DRAIN)>;
+		i2c-gpio,delay-us = <2>; /* ~100 kHz */
+		#address-cells = <1>;
+		#size-cells = <0>;
+
+		ak09918: magnetometer@c {
+			compatible = "asahi-kasei,ak09918";
+			reg = <0x0c>;
+
+			vdd-supply = <&pm8953_l10>;
+			vid-supply = <&pm8953_l6>;
+		};
+	};
+
+	spi6-gpio {
+		compatible = "spi-gpio";
+		#address-cells = <1>;
+		#size-cells = <0>;
+
+		sck-gpios = <&tlmm 23 GPIO_ACTIVE_HIGH>;
+		mosi-gpios = <&tlmm 20 GPIO_ACTIVE_HIGH>;
+		miso-gpios = <&tlmm 21 GPIO_ACTIVE_HIGH>;
+		num-chipselects = <1>;
+		cs-gpios = <&tlmm 22 GPIO_ACTIVE_LOW>;
+
+	    bmi160@0 {
+            compatible = "bosch,bmi160";
+            reg = <0>;
+            spi-max-frequency = <10000000>;
+            interrupt-parent = <&tlmm>;
+            interrupts = <42 IRQ_TYPE_EDGE_RISING>,
+			<45 IRQ_TYPE_EDGE_RISING>;
+            interrupt-names = "INT1", "INT2";
+
+			vdd-supply = <&pm8953_l10>;
+			vddio-supply = <&pm8953_l6>;
+
+			mount-matrix = "0", "1", "0",
+					"1", "0", "0",
+					"0", "0", "1";
+        };
+	};
+
+	spi7-gpio {
+		compatible = "spi-gpio";
+		#address-cells = <1>;
+		#size-cells = <0>;
+
+		sck-gpios = <&tlmm 135 GPIO_ACTIVE_HIGH>;
+		mosi-gpios = <&tlmm 137 GPIO_ACTIVE_HIGH>;
+		miso-gpios = <&tlmm 138 GPIO_ACTIVE_HIGH>;
+		num-chipselects = <1>;
+		cs-gpios = <&tlmm 136 GPIO_ACTIVE_LOW>;
+
+		madera: codec@0 {
+			compatible = "cirrus,cs47l35";
+			reg = <0>;
+			spi-max-frequency = <26000000>;
+			interrupt-parent = <&tlmm>;
+			interrupts = <46 IRQ_TYPE_LEVEL_LOW>;
+			reset-gpios = <&tlmm 68 GPIO_ACTIVE_LOW>;
+
+			pinctrl-names = "default";
+			pinctrl-0 = <&marley_irq_default>, <&marley_reset_default>, <&audio_clocks_default>;
+
+			/* TODO: Fix clocks
+			 * [    0.676990] madera spi1.0: Failed to get clocks: -517
+			 * [    0.684877] madera spi1.0: Failed to get clocks: -517
+			 * [    0.690119] madera spi1.0: Failed to request core supplies: -517
+			*/
+			clocks = <&rpmcc RPM_SMD_DIV_CLK2>, <&ccp_rtc>;
+			clock-names = "mclk1", "mclk2";
+
+			AVDD-supply = <&pm8953_l5>;
+			DBVDD1-supply = <&pm8953_l5>;
+			DBVDD2-supply = <&pm8953_l5>;
+			CPVDD1-supply = <&pm8953_l5>;
+			CPVDD2-supply = <&pm8953_l5>;
+			DCVDD-supply = <&vph_pwr>;
+
+			interrupt-controller;
+			#interrupt-cells = <2>;
+
+			gpio-controller;
+			#gpio-cells = <2>;
+		};
+	};
 };
 
 &tlmm { 
@@ -93,6 +194,49 @@
 				drive-strength = <2>; /* 2 MA */
 			};
 		};
+};
+
+&spi_7 {
+	status = "disabled";
+};
+
+&pm8953_gpios {
+	audio_clocks_default: audio-clock-default-state {
+		mclk1-default-state {
+			pins = "gpio1";
+			function = PMIC_GPIO_FUNC_FUNC1;
+			power-source = <0>;
+			qcom,drive-strength = <PMIC_GPIO_STRENGTH_MED>;
+			bias-disable;
+			output-low;
+		};
+
+		mclk2-default-state {
+			pins = "gpio2"; /* GPIO 2 */
+			function = PMIC_GPIO_FUNC_DTEST3;
+			output-low;
+			bias-disable; /* No Pull */
+		};
+	};
+};
+
+&tlmm {
+	marley_irq_default: marley-irq-default-state {
+		config {
+			pins = "gpio46";
+			drive-strength = <2>;
+			bias-pull-up;
+		};
+	};
+
+	marley_reset_default: marley-reset-default-state {
+		config {
+			pins = "gpio68";
+			output-high;
+			bias-pull-up;
+			drive-strength = <2>;
+		};
+	};
 };
 
 &cci_i2c1 {
@@ -196,7 +340,7 @@
 		pinctrl-names = "default";
 		pinctrl-0 = <&cs35l35_irq_default &cs35l35_reset_default>;
 
-		cirrus,boost-ind-nanohenry = <1000>;
+		cirrus,boost-ind-nanohenry = <1200>;
 	};
 };
 
