@@ -1397,19 +1397,52 @@
 				bias-disable;
 			};
 
-			spi_6_default: spi-6-default-state {
-				pins = "gpio22", "gpio23";
-				function = "blsp_spi6";
-				drive-strength = <2>;
-				bias-disable;
+			spi_6_default: spi6-default-state {
+				spi-pins {
+					pins = "gpio20", "gpio21", "gpio23";
+					function = "blsp_spi6";
+					drive-strength = <12>;
+					bias-disable;
+				};
+				cs-pins {
+					pins = "gpio22";
+					function = "gpio";
+					drive-strength = <16>;
+					bias-disable;
+					output-high;
+				};
 			};
 
-			spi_6_sleep: spi-6-sleep-state {
-				pins = "gpio22", "gpio23";
+			spi_6_sleep: spi6-sleep-state {
+				pins = "gpio20", "gpio21", "gpio23", "gpio22";
 				function = "gpio";
 				drive-strength = <2>;
-				bias-disable;
+				bias-pull-down;
 			};
+
+			spi_7_default: spi7-default-state {
+				spi-pins {
+					pins = "gpio137", "gpio138", "gpio135";
+					function = "blsp_spi7";
+					drive-strength = <12>;
+					bias-disable;
+				};
+				cs-pins {
+					pins = "gpio136";
+					function = "gpio";
+					drive-strength = <16>;
+					bias-disable;
+					output-high;
+				};
+			};
+
+			spi_7_sleep: spi7-sleep-state {
+				pins = "gpio137", "gpio138", "gpio135", "gpio136";
+				function = "gpio";
+				drive-strength = <2>;
+				bias-pull-down;
+			};
+
 
 			wcnss_pin_a: wcnss-active-state {
 
@@ -2732,6 +2765,26 @@
 			pinctrl-names = "default", "sleep";
 			pinctrl-0 = <&i2c_7_default>;
 			pinctrl-1 = <&i2c_7_sleep>;
+
+			#address-cells = <1>;
+			#size-cells = <0>;
+
+			status = "disabled";
+		};
+
+		spi_7: spi@7af7000 {
+			compatible = "qcom,spi-qup-v2.2.1";
+			reg = <0x07af7000 0x600>;
+			interrupts = <GIC_SPI 301 IRQ_TYPE_LEVEL_HIGH>;
+			clock-names = "core", "iface";
+			clocks = <&gcc GCC_BLSP2_QUP3_I2C_APPS_CLK>,
+				 <&gcc GCC_BLSP2_AHB_CLK>;
+			dmas = <&blsp2_dma 8>, <&blsp2_dma 9>;
+			dma-names = "tx", "rx";
+
+			pinctrl-names = "default", "sleep";
+			pinctrl-0 = <&spi_7_default>;
+			pinctrl-1 = <&spi_7_sleep>;
 
 			#address-cells = <1>;
 			#size-cells = <0>;
