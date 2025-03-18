@@ -55,6 +55,7 @@ dtb-$(CONFIG_ARCH_QCOM) += \
 	qcom-msm8974pro-sony-xperia-shinano-castor.dtb \
 	qcom-msm8974pro-sony-xperia-shinano-leo.dtb \
 	qcom-mdm9615-wp8548-mangoh-green.dtb \
+	qcom-mdm9225-tplink-m7350-v3.dtb \
 	qcom-sdx55-mtp.dtb \
 	qcom-sdx55-t55.dtb \
 	qcom-sdx55-telit-fn980-tlb.dtb \
