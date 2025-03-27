@@ -876,6 +876,7 @@ properties:
               - sony,kirin-row
               - sony,pioneer-row
               - sony,voyager-row
+              - motorola,payton
           - const: qcom,sdm630
 
       - items:
@@ -1286,5 +1287,3 @@ allOf:
             maxItems: 2
 
 additionalProperties: true
-
-...
