@@ -16,6 +16,8 @@
 	gpu_sdm660_opp_table: opp-table {
 		compatible = "operating-points-v2";
 
+		/delete-node/ opp-700000000;
+
 		/*
 		 * 775MHz is only available on the highest speed bin
 		 * Though it cannot be used for now due to interconnect
@@ -59,6 +61,13 @@
 			opp-level = <RPM_SMD_LEVEL_SVS_PLUS>;
 			opp-peak-kBps = <2724000>;
 			opp-supported-hw = <0xff>;
+		};*/
+
+		opp-430000000 {
+			opp-hz = /bits/ 64 <430000000>;
+			opp-level = <RPM_SMD_LEVEL_SVS_PLUS>;
+			opp-peak-kBps = <2724000>;
+			opp-supported-hw = <0xff>;
 		};
 
 		opp-370000000 {
@@ -67,7 +76,6 @@
 			opp-peak-kBps = <2188000>;
 			opp-supported-hw = <0xff>;
 		};
-		*/
 
 		opp-266000000 {
 			opp-hz = /bits/ 64 <266000000>;
