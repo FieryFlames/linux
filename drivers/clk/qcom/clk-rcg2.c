@@ -1329,9 +1329,14 @@ static int clk_gfx3d_src_determine_rate(struct clk_hw *hw,
 	int ret;
 
 	xo = clk_hw_get_parent_by_index(hw, 0);
-	if (req->rate == clk_hw_get_rate(xo)) {
+	/*
+	 * When msm_gpu devfreq wants to put GPU to idle, it requests the rate
+	 * of 27 MHz (27000000). Check for any request below 30 MHz here:
+	 */
+	if (req->rate < 30000000) {
 		req->best_parent_hw = xo;
-		req->best_parent_rate = req->rate;
+		/* return 19.2 MHz even for 27 MHz requests */
+		req->best_parent_rate = clk_hw_get_rate(xo);
 		return 0;
 	}
 
@@ -1385,6 +1390,10 @@ static int clk_gfx3d_src_set_rate_and_parent(struct clk_hw *hw, unsigned long ra
 	int ret;
 
 	cfg = rcg->parent_map[index].cfg << CFG_SRC_SEL_SHIFT;
+
+	/* For "idle" requests use parent_rate, which will be cxo rate of 19.2 MHz */
+	if (rate < 30000000)
+		rate = parent_rate;
 
 	f = qcom_find_freq(rcg->freq_tbl, rate);
 	if (!f)
