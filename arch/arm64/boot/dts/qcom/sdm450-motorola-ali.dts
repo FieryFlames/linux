@@ -7,6 +7,7 @@
 #include "sdm450.dtsi"
 #include "pm8953.dtsi"
 #include "pmi8950.dtsi"
+#include <dt-bindings/usb/pd.h>
 
 /delete-node/ &qseecom_mem;
 
@@ -57,6 +58,47 @@
 	};
 };
 
+&i2c_1 {
+	status = "okay";
+
+	typec-portc@22 {
+		compatible = "fcs,fusb302";
+		reg = <0x22>;
+
+		interrupt-parent = <&tlmm>;
+		interrupts = <9 IRQ_TYPE_LEVEL_LOW>;
+		pinctrl-names = "default";
+		pinctrl-0 = <&fusb302_int_default>;
+		vbus-supply = <&otg_vbus>;
+
+		connector {
+			compatible = "usb-c-connector";
+			label = "USB-C";
+			data-role = "dual";
+			power-role = "dual";
+			self-powered;
+
+			op-sink-microwatt = <1000000>;
+			sink-pdos = <PDO_FIXED(5000, 2000, 
+					 PDO_FIXED_DUAL_ROLE |
+					 PDO_FIXED_USB_COMM |
+					 PDO_FIXED_DATA_SWAP)>;
+			source-pdos = <PDO_FIXED(5000, 1000,
+					 PDO_FIXED_DUAL_ROLE |
+					 PDO_FIXED_USB_COMM |
+					 PDO_FIXED_DATA_SWAP)>;
+
+			try-power-role = "sink";
+
+			port {
+				fusb302_hs_in: endpoint {
+					remote-endpoint = <&usb_dwc3_hs>;
+				};
+			};
+		};
+	};
+};
+
 &i2c_3 {
 	status = "okay";
 
@@ -68,7 +110,7 @@
 		vcc-supply = <&pm8953_l10>;
 
 		pinctrl-names = "default";
-		pinctrl-0 = <&ts_int_active &ts_reset_active>;
+		pinctrl-0 = <&ts_int_default &ts_reset_default>;
 
 		reset-gpios = <&tlmm 64 GPIO_ACTIVE_LOW>;
 		touchscreen-size-x = <1080>;
@@ -321,17 +363,25 @@
 		bias-pull-down;
 	};
 
-	ts_int_active: ts-int-active-state {
+	ts_int_default: ts-int-default-state {
 		pins = "gpio65";
+		function = "gpio";
+		drive-strength = <16>;
+		input-enable;
+		bias-disable;
+	};
+
+	ts_reset_default: ts-reset-default-state {
+		pins = "gpio64";
 		function = "gpio";
 		drive-strength = <8>;
 		bias-pull-up;
 	};
 
-	ts_reset_active: ts-reset-active-state {
-		pins = "gpio64";
+	fusb302_int_default: fusb302-int-default-state {
+		pins = "gpio9";
 		function = "gpio";
-		drive-strength = <0x08>;
+		drive-strength = <2>;
 		bias-pull-up;
 	};
 };
@@ -341,8 +391,20 @@
 };
 
 &usb3_dwc3 {
-	/delete-property/ usb-role-switch;
-	dr_mode = "peripheral";
+	usb-role-switch;
+
+	ports {
+		#address-cells = <1>;
+		#size-cells = <0>;
+
+		port@0 {
+			reg = <0>;
+
+			usb_dwc3_hs: endpoint {
+				remote-endpoint = <&fusb302_hs_in>;
+			};
+		};
+	};
 };
 
 &wcnss {
