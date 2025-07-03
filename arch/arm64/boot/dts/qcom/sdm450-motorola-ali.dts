@@ -8,6 +8,7 @@
 #include "pm8953.dtsi"
 #include "pmi8950.dtsi"
 #include <dt-bindings/usb/pd.h>
+#include <dt-bindings/pinctrl/qcom,pmic-gpio.h>
 
 /delete-node/ &qseecom_mem;
 
@@ -56,6 +57,70 @@
 		regulator-always-on;
 		regulator-boot-on;
 	};
+
+	clocks {
+		cdc_div_clk: clock {
+    			compatible = "fixed-clock";
+    			#clock-cells = <0>;
+    			clock-frequency = <32768>; // TODO: This probably isn't right
+		};
+		ccp_rtc: clock {
+    			compatible = "fixed-clock";
+    			#clock-cells = <0>;
+    			clock-frequency = <32768>;
+		};
+    	};
+
+	spi7-gpio {
+		compatible = "spi-gpio";
+		#address-cells = <1>;
+		#size-cells = <0>;
+
+		sck-gpios = <&tlmm 135 GPIO_ACTIVE_HIGH>;
+		mosi-gpios = <&tlmm 137 GPIO_ACTIVE_HIGH>;
+		miso-gpios = <&tlmm 138 GPIO_ACTIVE_HIGH>;
+		num-chipselects = <1>;
+		cs-gpios = <&tlmm 136 GPIO_ACTIVE_LOW>;
+
+		cs47l35: codec@0 {
+			compatible = "cirrus,cs47l35";
+			reg = <0>;
+			spi-max-frequency = <26000000>;
+			interrupt-parent = <&tlmm>;
+			interrupts = <46 IRQ_TYPE_LEVEL_LOW>;
+			reset-gpios = <&tlmm 68 GPIO_ACTIVE_LOW>;
+
+			#sound-dai-cells = <0>;
+
+			pinctrl-names = "default";
+			pinctrl-0 = <&cs47l35_irq_default>, <&marley_reset_default>, <&audio_clocks_default>, <&pin_settings>;
+
+			// TODO: are they really fixed-clocks
+			clocks = <&cdc_div_clk>, <&ccp_rtc>;
+			clock-names = "mclk1", "mclk2";
+
+			AVDD-supply = <&pm8953_l5>;
+			DBVDD1-supply = <&pm8953_l5>;
+			DBVDD2-supply = <&pm8953_l5>;
+			CPVDD1-supply = <&pm8953_l5>;
+			CPVDD2-supply = <&pm8953_l5>;
+			DCVDD-supply = <&vph_pwr>;
+
+			interrupt-controller;
+			#interrupt-cells = <2>;
+
+			gpio-controller;
+			#gpio-cells = <2>;
+
+			pin_settings: pin-settings {
+                		opclk {
+                		    pins = "gpio3";
+                		    function = "opclk";
+				// TODO: other registers
+                		};
+			};
+		};
+	};
 };
 
 &i2c_1 {
@@ -99,6 +164,26 @@
 	};
 };
 
+&i2c_2 {
+	status = "okay";
+
+	cs35l35: speaker-amp@40 {
+		compatible = "cirrus,cs35l35";
+		reg = <0x40>;
+		interrupt-parent = <&tlmm>;
+		interrupts = <63 IRQ_TYPE_LEVEL_LOW>;
+		reset-gpios = <&tlmm 94 GPIO_ACTIVE_HIGH>;
+
+		VA-supply = <&pm8953_l6>;
+		VP-supply = <&vph_pwr>;
+
+		pinctrl-names = "default";
+		pinctrl-0 = <&cs35l35_irq_default &cs35l35_reset_default>;
+
+		cirrus,boost-ind-nanohenry = <1200>;
+	};
+};
+
 &i2c_3 {
 	status = "okay";
 
@@ -124,6 +209,10 @@
 
 &lab {
 	qcom,soft-start-us = <800>;
+};
+
+&lpass {
+	status = "okay";
 };
 
 &mdss {
@@ -180,6 +269,26 @@
 	vdda-phy-dpdm-supply = <&pm8953_l13>;
 
 	status = "okay";
+};
+
+&pm8953_gpios {
+	audio_clocks_default: audio-clock-default-state {
+		mclk1-default-state {
+			pins = "gpio1";
+			function = PMIC_GPIO_FUNC_FUNC1;
+			power-source = <0>;
+			qcom,drive-strength = <PMIC_GPIO_STRENGTH_MED>;
+			bias-disable;
+			output-low;
+		};
+
+		mclk2-default-state {
+			pins = "gpio2"; /* GPIO 2 */
+			function = PMIC_GPIO_FUNC_DTEST3;
+			output-low;
+			bias-disable; /* No Pull */
+		};
+	};
 };
 
 &pm8953_resin {
@@ -383,6 +492,33 @@
 		function = "gpio";
 		drive-strength = <2>;
 		bias-pull-up;
+	};
+
+	cs47l35_irq_default: cs47l35-irq-default-state {
+		pins = "gpio46";
+		drive-strength = <2>;
+		bias-pull-up;
+	};
+
+	cs47l35_reset_default: cs47l35-reset-default-state {
+		pins = "gpio68";
+		output-high;
+		bias-pull-up;
+		drive-strength = <2>;
+	};
+
+
+	cs35l35_irq_default: cs35l35-irq-default-state {
+		pins = "gpio63";
+		bias-pull-up;
+		drive-strength = <2>;
+	};
+
+	cs35l35_reset_default: cs35l35-reset-default-state {
+		pins = "gpio94";
+		output-high;
+		bias-pull-up;
+		drive-strength = <2>;
 	};
 };
 
