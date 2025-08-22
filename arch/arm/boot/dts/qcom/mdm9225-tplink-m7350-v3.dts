@@ -31,6 +31,44 @@
 			debounce-interval = <15>;
 		};
 	};
+
+	spi2-gpio {
+		compatible = "spi-gpio";
+		#address-cells = <1>;
+		#size-cells = <0>;
+
+		status = "okay";
+
+		sck-gpios = <&tlmm 7 GPIO_ACTIVE_HIGH>;
+		mosi-gpios = <&tlmm 4 GPIO_ACTIVE_HIGH>;
+		miso-gpios = <&tlmm 5 GPIO_ACTIVE_HIGH>;
+		num-chipselects = <1>;
+		cs-gpios = <&tlmm 6 GPIO_ACTIVE_LOW>;
+
+		panel@0 {
+			compatible = "tplink,s90319", "panel-mipi-dbi-spi";
+			reg = <0>;
+			//backlight = <&backlight>;
+			dc-gpios = <&tlmm 21 GPIO_ACTIVE_HIGH>;
+			reset-gpios = <&tlmm 20 GPIO_ACTIVE_HIGH>;
+			spi-max-frequency = <100000000>;
+
+			height-mm = <29>;
+			width-mm = <29>;
+
+			panel-timing {
+				hactive = <128>;
+				vactive = <128>;
+				hback-porch = <0>;
+				vback-porch = <0>;
+				clock-frequency = <0>;
+				hfront-porch = <0>;
+				hsync-len = <0>;
+				vfront-porch = <0>;
+				vsync-len = <0>;
+			};
+		};
+	};
 };
 
 /*
