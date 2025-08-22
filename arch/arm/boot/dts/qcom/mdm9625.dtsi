@@ -232,12 +232,13 @@
 			#size-cells = <0>;
 			status = "disabled";
 		};
+*/
 
 		blsp1_spi2: spi@f9924000 {
 			compatible = "qcom,spi-qup-v2.1.1";
 			reg = <0xf9924000 0x1000>;
 			interrupts = <GIC_SPI 96 IRQ_TYPE_LEVEL_HIGH>;
-			clocks = <&gcc GCC_BLSP1_QUP2_I2C_APPS_CLK>, <&gcc GCC_BLSP1_AHB_CLK>;
+			clocks = <&gcc GCC_BLSP1_QUP2_SPI_APPS_CLK>, <&gcc GCC_BLSP1_AHB_CLK>;
 			clock-names = "core", "iface";
 			#address-cells = <1>;
 			#size-cells = <0>;
@@ -246,7 +247,6 @@
 			pinctrl-names = "default", "sleep";
 			status = "disabled";
 		};
-*/
 
 		usb: usb@f9a55000 {
 			compatible = "qcom,ci-hdrc";

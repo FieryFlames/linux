@@ -31,7 +31,7 @@
 			debounce-interval = <15>;
 		};
 	};
-
+/*
 	spi2-gpio {
 		compatible = "spi-gpio";
 		#address-cells = <1>;
@@ -69,11 +69,17 @@
 			};
 		};
 	};
+	*/
 };
 
-/*
+
 &blsp1_spi2 {
-	status = "disabled";
+	status = "okay";
+
+	spi-max-frequency = <25000000>;
+
+	num-chipselects = <1>;
+	cs-gpios = <&tlmm 6 GPIO_ACTIVE_LOW>;
 
 	panel@0 {
 		compatible = "tplink,s90319", "panel-mipi-dbi-spi";
@@ -84,6 +90,8 @@
 
 		height-mm = <29>;
 		width-mm = <29>;
+
+		spi-max-frequency = <9600000>;
 
 		panel-timing {
 			hactive = <128>;
@@ -98,7 +106,6 @@
 		};
 	};
 };
-*/
 
 &tlmm {
 	gpio_keys_default: gpio-keys-default-state {
